@@ -59,6 +59,32 @@ export class MediaService {
         : session.soloFilters;
     }
 
+    let filteredIncludedLibraries = includedLibraries;
+    if (activeProviderName !== ProviderType.TMDB) {
+      const availableLibraries = await provider.getLibraries(auth);
+      const matchingLibs = availableLibraries.filter((lib: any) => {
+        const isTv = sessionFilters?.mediaType === "tv";
+        const isBoth = sessionFilters?.mediaType === "both";
+        const type = lib.CollectionType;
+        if (activeProviderName === ProviderType.PLEX) {
+          if (isTv) return type === "show";
+          if (isBoth) return type === "movie" || type === "show";
+          return type === "movie";
+        } else {
+          if (isTv) return type === "tvshows";
+          if (isBoth) return type === "movies" || type === "tvshows";
+          return type === "movies";
+        }
+      });
+      
+      if (includedLibraries.length > 0) {
+        const intersection = matchingLibs.filter((l: any) => includedLibraries.includes(l.Id)).map((l: any) => l.Id);
+        filteredIncludedLibraries = intersection.length > 0 ? intersection : matchingLibs.map((l: any) => l.Id);
+      } else {
+        filteredIncludedLibraries = matchingLibs.map((l: any) => l.Id);
+      }
+    }
+
     const { watchProviders, watchRegion } = await this.resolveWatchProviders(session, sessionFilters, auth, activeProviderName);
     const defaultSort = activeProviderName === ProviderType.TMDB ? "Popular" : "Trending";
 
@@ -66,7 +92,7 @@ export class MediaService {
     if (searchTerm) {
       const results = await provider.getItems({ 
         searchTerm, 
-        libraries: includedLibraries.length > 0 ? includedLibraries : undefined,
+        libraries: filteredIncludedLibraries.length > 0 ? filteredIncludedLibraries : undefined,
         watchProviders,
         watchRegion,
         limit: 20 
@@ -76,9 +102,9 @@ export class MediaService {
 
     // 4. Handle Session vs Solo Mode
     if (session.sessionCode) {
-      return this.getSessionItems(session.sessionCode, sessionFilters, auth, provider, excludeIds, includedLibraries, watchProviders, watchRegion, page, limit, effectiveOffset);
+      return this.getSessionItems(session.sessionCode, sessionFilters, auth, provider, excludeIds, filteredIncludedLibraries, watchProviders, watchRegion, page, limit, effectiveOffset);
     } else {
-      return this.getSoloItems(sessionFilters, auth, provider, excludeIds, includedLibraries, watchProviders, watchRegion, page, limit, effectiveOffset);
+      return this.getSoloItems(sessionFilters, auth, provider, excludeIds, filteredIncludedLibraries, watchProviders, watchRegion, page, limit, effectiveOffset);
     }
   }
 
@@ -507,21 +533,7 @@ export class MediaService {
     const maxItems = 10000; // Safety limit
 
     // Get libraries to fetch from
-    let libraries = includedLibraries;
-    const availableLibraries = await provider.getLibraries(auth);
-    const filteredLibs = availableLibraries.filter((lib: any) => {
-      if (sessionFilters?.mediaType === "tv") return lib.CollectionType === "tvshows";
-      if (sessionFilters?.mediaType === "both") return lib.CollectionType === "movies" || lib.CollectionType === "tvshows";
-      return lib.CollectionType === "movies";
-    });
-    
-    if (libraries.length > 0) {
-      // Keep only libraries that match the requested media type
-      const intersection = filteredLibs.filter((l: any) => libraries.includes(l.Id)).map((l: any) => l.Id);
-      libraries = intersection.length > 0 ? intersection : filteredLibs.map((l: any) => l.Id);
-    } else {
-      libraries = filteredLibs.map((l: any) => l.Id);
-    }
+    const libraries = includedLibraries;
 
     // Fetch from each library
     for (const libraryId of libraries) {
@@ -585,20 +597,7 @@ export class MediaService {
     const seenIds = new Set<string>();
 
     // Get libraries to fetch from
-    let libraries = includedLibraries;
-    const availableLibraries = await provider.getLibraries(auth);
-    const filteredLibs = availableLibraries.filter((lib: any) => {
-      if (sessionFilters?.mediaType === "tv") return lib.CollectionType === "show"; // Plex uses 'show' for TV
-      if (sessionFilters?.mediaType === "both") return lib.CollectionType === "movie" || lib.CollectionType === "show";
-      return lib.CollectionType === "movie"; // Plex uses 'movie'
-    });
-    
-    if (libraries.length > 0) {
-      const intersection = filteredLibs.filter((l: any) => libraries.includes(l.Id)).map((l: any) => l.Id);
-      libraries = intersection.length > 0 ? intersection : filteredLibs.map((l: any) => l.Id);
-    } else {
-      libraries = filteredLibs.map((l: any) => l.Id);
-    }
+    const libraries = includedLibraries;
 
     // Fetch from each library section
     for (const libraryId of libraries) {
