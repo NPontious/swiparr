@@ -317,6 +317,7 @@ export class TmdbProvider implements MediaProvider {
     return {
       Id: movie.id.toString(),
       Name: movie.title,
+      Type: "Movie",
       Overview: movie.overview,
       Language: movie.original_language,
       ProductionYear: movie.release_date ? new Date(movie.release_date).getFullYear() : undefined,
@@ -366,6 +367,7 @@ export class TmdbProvider implements MediaProvider {
     return {
       Id: movie.id.toString(),
       Name: movie.title,
+      Type: "Movie",
       OriginalTitle: movie.original_title,
       Overview: movie.overview,
       Language: movie.original_language,

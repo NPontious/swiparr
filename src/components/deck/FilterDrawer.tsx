@@ -56,6 +56,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(DEFAULT_LANGUAGES);
   const [showAllLanguages, setShowAllLanguages] = useState(false);
   const [mediaType, setMediaType] = useState<"movie" | "tv" | "both">("movie");
+  const [providerFilter, setProviderFilter] = useState<"library" | "tmdb" | "both">("both");
   const [sortBy, setSortBy] = useState<string>("Trending");
   const [unplayedOnly, setUnplayedOnly] = useState<boolean>(true);
   const [yearRange, setYearRange] = useState<[number, number]>([1900, new Date().getFullYear()]);
@@ -138,6 +139,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
       }
       setSelectedLanguages(currentFilters?.tmdbLanguages ?? DEFAULT_LANGUAGES);
       setMediaType(currentFilters?.mediaType || "movie");
+      setProviderFilter(currentFilters?.providerFilter || "both");
       setSortBy(currentFilters?.sortBy || defaultSort);
       setUnplayedOnly(currentFilters?.unplayedOnly ?? true);
       setYearRange(currentFilters?.yearRange || [minYearLimit, maxYearLimit]);
@@ -173,6 +175,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
       tmdbLanguages: isLanguageDefault ? undefined : f.tmdbLanguages,
       sortBy: (f.sortBy === defaultSort || !f.sortBy) ? undefined : f.sortBy,
       unplayedOnly: f.unplayedOnly ?? true,
+      providerFilter: f.providerFilter === "both" ? undefined : f.providerFilter,
       yearRange: isYearDefault ? undefined : f.yearRange,
       runtimeRange: isRuntimeDefault ? undefined : f.runtimeRange,
       minCommunityRating: (f.minCommunityRating && f.minCommunityRating > 0) ? f.minCommunityRating : undefined
@@ -180,22 +183,24 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
   };
 
   const getCurrentFiltersObject = (): Filters => {
-    return normalizeFilters({
-      mediaType: mediaType,
-      genres: selectedGenres,
-      excludedGenres,
-      officialRatings: selectedRatings,
-      excludedOfficialRatings: excludedRatings,
+    const filters: Filters = {
+      genres: genreFilterMode === "include" ? selectedGenres : [],
+      excludedGenres: genreFilterMode === "exclude" ? excludedGenres : [],
+      officialRatings: ratingFilterMode === "include" ? selectedRatings : [],
+      excludedOfficialRatings: ratingFilterMode === "exclude" ? excludedRatings : [],
       watchProviders: selectedWatchProviders,
-      themes: selectedThemes,
-      excludedThemes,
+      themes: themeFilterMode === "include" ? selectedThemes : [],
+      excludedThemes: themeFilterMode === "exclude" ? excludedThemes : [],
       tmdbLanguages: selectedLanguages,
-      sortBy: sortBy,
-      unplayedOnly: unplayedOnly,
-      yearRange: yearRange,
-      runtimeRange: runtimeRange,
+      mediaType,
+      providerFilter,
+      sortBy,
+      unplayedOnly,
+      yearRange,
+      runtimeRange,
       minCommunityRating: minRating
-    });
+    };
+    return normalizeFilters(filters);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -398,6 +403,27 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
                     </ToggleGroup>
                   </div>
                 </div>
+
+                {/* Source Filter Section */}
+                {(session?.provider === ProviderType.JELLYFIN || session?.provider === ProviderType.EMBY) && (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Source</Label>
+                      <ToggleGroup
+                        type="single"
+                        variant="outline"
+                        size={"sm"}
+                        value={providerFilter}
+                        onValueChange={(val) => { if (val) setProviderFilter(val as any); }}
+                        className="flex mr-auto"
+                      >
+                        <ToggleGroupItem value="library" aria-label="Library Only">Library Only</ToggleGroupItem>
+                        <ToggleGroupItem value="tmdb" aria-label="TMDB Discover">TMDB Discover</ToggleGroupItem>
+                        <ToggleGroupItem value="both" aria-label="Both">Both</ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+                  </div>
+                )}
 
                 {/* Sort Section */}
                 <div className="space-y-4 -mb-4">

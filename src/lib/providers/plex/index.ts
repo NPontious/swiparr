@@ -392,6 +392,7 @@ export class PlexProvider implements MediaProvider {
       Id: item.ratingKey,
       Guid: watchlistGuid,
       Name: item.title,
+      Type: item.type === 'movie' ? 'Movie' : item.type === 'show' ? 'Series' : item.type,
       OriginalTitle: item.originalTitle,
       Language: language,
       RunTimeTicks: item.duration ? item.duration * 10000 : undefined, 

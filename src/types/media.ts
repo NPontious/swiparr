@@ -15,6 +15,7 @@ export interface MediaItem {
   Id: string;
   Guid?: string;
   Name: string;
+  Type?: string;
   OriginalTitle?: string;
   Language?: string;
   RunTimeTicks?: number;

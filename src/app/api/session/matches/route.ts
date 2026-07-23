@@ -8,6 +8,7 @@ import { SessionData } from "@/types";
 import { AuthService } from "@/lib/services/auth-service";
 import { getMediaProvider } from "@/lib/providers/factory";
 import { handleApiError } from "@/lib/api-utils";
+import { ProviderType } from "@/lib/providers/types";
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
@@ -32,10 +33,19 @@ export async function GET(request: NextRequest) {
 
     const ids = matches.map((m: any) => m.externalId);
     
+    const tmdbProvider = getMediaProvider(ProviderType.TMDB);
+
     const itemsPromises = ids.map(async (id: any) => {
         try {
             return await provider.getItemDetails(id, auth, { includeUserState: true });
         } catch (error) {
+            try {
+                if (auth.provider !== ProviderType.TMDB) {
+                    return await tmdbProvider.getItemDetails(id, auth, { includeUserState: true });
+                }
+            } catch (tmdbError) {
+                return null;
+            }
             return null;
         }
     });

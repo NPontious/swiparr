@@ -173,15 +173,20 @@ export class MediaService {
         sortBy: "Popular",
     };
 
+    const shouldFetchBase = params.providerFilter !== "tmdb";
+    const shouldFetchTmdb = params.providerFilter !== "library" && params.mediaType !== "tv";
+
     const [baseItems, tmdbItems] = await Promise.all([
-      provider.getItems(params, auth).catch((e: any) => {
+      shouldFetchBase ? provider.getItems(params, auth).catch((e: any) => {
         logger.error("Error fetching base items for mixed deck:", e);
         return [];
-      }),
-      params.mediaType === "tv" ? Promise.resolve([]) : tmdbProvider.getItems(tmdbParams, auth).catch((e: any) => {
-        logger.error("Error fetching tmdb items for mixed deck:", e);
-        return [];
-      })
+      }) : Promise.resolve([]),
+      shouldFetchTmdb ? (
+        tmdbProvider.getItems(tmdbParams, auth).catch((e: any) => {
+          logger.error("Error fetching tmdb items for mixed deck:", e);
+          return [];
+        })
+      ) : Promise.resolve([])
     ]);
 
     const merged = this.mergeAndResolveItems(baseItems, tmdbItems);
@@ -295,6 +300,7 @@ export class MediaService {
         tmdbLanguages: sessionFilters?.tmdbLanguages,
         unplayedOnly: sessionFilters?.unplayedOnly,
         mediaType: sessionFilters?.mediaType,
+        providerFilter: sessionFilters?.providerFilter,
         limit: requestLimit,
         offset: effectiveOffset + scanOffset,
       });
@@ -507,17 +513,24 @@ export class MediaService {
   ): Promise<MediaItem[]> {
     const providerName = auth.provider as ProviderType;
     const allItems: MediaItem[] = [];
+    logger.info(`[fetchAllItemsForDeck] sessionFilters.mediaType: '${sessionFilters?.mediaType}'`);
 
     // Provider-specific fetching strategies
     if (providerName === ProviderType.JELLYFIN || providerName === ProviderType.EMBY) {
+      const shouldFetchBase = sessionFilters?.providerFilter !== "tmdb";
+      const shouldFetchTmdb = sessionFilters?.providerFilter !== "library" && sessionFilters?.mediaType !== "tv";
+
       const [baseItems, tmdbItems] = await Promise.all([
-        this.fetchAllJellyfinEmbyItems(provider, auth, includedLibraries, sessionFilters, watchProviders, watchRegion),
-        sessionFilters?.mediaType === "tv" ? Promise.resolve([]) : this.fetchAllTMDBItems(getMediaProvider(ProviderType.TMDB), auth, sessionFilters, watchProviders, watchRegion)
+        shouldFetchBase ? this.fetchAllJellyfinEmbyItems(provider, auth, includedLibraries, sessionFilters, watchProviders, watchRegion) : Promise.resolve([]),
+        shouldFetchTmdb ? (
+          this.fetchAllTMDBItems(getMediaProvider(ProviderType.TMDB), auth, sessionFilters, watchProviders, watchRegion)
+        ) : Promise.resolve([])
       ]);
       return this.mergeAndResolveItems(baseItems, tmdbItems);
     } else if (providerName === ProviderType.PLEX) {
       return this.fetchAllPlexItems(provider, auth, includedLibraries, sessionFilters);
     } else if (providerName === ProviderType.TMDB) {
+      logger.info(`[fetchAllItemsForDeck] CALLING TMDB ITEMS (provider is TMDB)!`);
       return this.fetchAllTMDBItems(provider, auth, sessionFilters, watchProviders, watchRegion);
     }
 
@@ -758,6 +771,8 @@ export class MediaService {
         excludedThemes: sessionFilters?.excludedThemes,
         tmdbLanguages: sessionFilters?.tmdbLanguages,
         unplayedOnly: sessionFilters?.unplayedOnly !== undefined ? sessionFilters.unplayedOnly : true,
+        mediaType: sessionFilters?.mediaType,
+        providerFilter: sessionFilters?.providerFilter,
         limit: requestLimit,
         offset: effectiveOffset + scanOffset
       });

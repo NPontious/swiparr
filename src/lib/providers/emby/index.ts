@@ -266,6 +266,7 @@ export class EmbyProvider implements MediaProvider {
     return {
       Id: item.Id,
       Name: item.Name,
+      Type: item.Type,
       OriginalTitle: item.OriginalTitle,
       Language: this.getItemLanguage(item),
       RunTimeTicks: item.RunTimeTicks,

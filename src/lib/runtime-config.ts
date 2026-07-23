@@ -20,6 +20,8 @@ export interface RuntimeConfig {
   enableDebug: boolean;
   tmdbDefaultRegion: string;
   useStaticFilters: boolean;
+  radarrUrl?: string;
+  sonarrUrl?: string;
   /** Admin-configured server URL for each provider (may be empty) */
   providerUrls?: {
     jellyfin: string;
@@ -56,6 +58,8 @@ export function getRuntimeConfig(overrides?: Partial<RuntimeConfig>): RuntimeCon
     enableDebug: config.ENABLE_DEBUG,
     tmdbDefaultRegion: config.TMDB_DEFAULT_REGION || DEFAULT_TMDB_REGION,
     useStaticFilters: config.USE_STATIC_FILTERS,
+    radarrUrl: config.RADARR_URL,
+    sonarrUrl: config.SONARR_URL,
     providerUrls: {
       jellyfin: config.JELLYFIN_URL || '',
       emby: config.EMBY_URL || '',

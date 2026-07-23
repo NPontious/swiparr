@@ -23,7 +23,7 @@ interface MovieListItemProps {
 
 
 export function MovieListItem({ movie, onClick, variant = "full", isLiked }: MovieListItemProps) {
-  const { capabilities, serverPublicUrl, provider: runtimeProvider } = useRuntimeConfig();
+  const { capabilities, serverPublicUrl, provider: runtimeProvider, radarrUrl, sonarrUrl } = useRuntimeConfig();
 
   const { data: sessionStatus } = useSession();
 
@@ -40,12 +40,24 @@ export function MovieListItem({ movie, onClick, variant = "full", isLiked }: Mov
 
   const currentMovie = syncedMovie ? { ...movie, ...syncedMovie } : movie;
   const activeProvider = sessionStatus?.provider || runtimeProvider;
-  const detailsUrl = getProviderDetailsUrl({
-    provider: activeProvider,
-    serverPublicUrl,
-    machineId: sessionStatus?.machineId,
-    itemId: currentMovie.Id,
-  });
+  
+  let detailsUrl = "";
+  if (currentMovie.resolvedProvider === 'tmdb' || currentMovie.sourceProvider === 'tmdb') {
+    if (currentMovie.Type === "Movie" && radarrUrl) {
+      detailsUrl = `${radarrUrl}/add/new?term=tmdb:${currentMovie.Id}`;
+    } else if (currentMovie.Type === "Series" && sonarrUrl) {
+      detailsUrl = `${sonarrUrl}/add/new?term=tmdb:${currentMovie.Id}`;
+    } else {
+      detailsUrl = `https://www.themoviedb.org/${currentMovie.Type === 'Movie' ? 'movie' : 'tv'}/${currentMovie.Id}`;
+    }
+  } else {
+    detailsUrl = getProviderDetailsUrl({
+      provider: activeProvider,
+      serverPublicUrl,
+      machineId: sessionStatus?.machineId,
+      itemId: currentMovie.Id,
+    });
+  }
 
   const swipeDate = (() => {
     if (!currentMovie.swipedAt) return null;
@@ -79,8 +91,8 @@ export function MovieListItem({ movie, onClick, variant = "full", isLiked }: Mov
       )}>
         <OptimizedImage
           src={currentMovie.ImageTags?.Primary 
-            ? `/api/media/image/${currentMovie.Id}?tag=${currentMovie.ImageTags?.Primary}`
-            : `/api/media/image/${currentMovie.Id}`
+            ? `/api/media/image/${currentMovie.Id}?tag=${currentMovie.ImageTags?.Primary}${currentMovie.resolvedProvider ? `&provider=${currentMovie.resolvedProvider}` : ''}`
+            : `/api/media/image/${currentMovie.Id}${currentMovie.resolvedProvider ? `?provider=${currentMovie.resolvedProvider}` : ''}`
           }
           alt={currentMovie.Name}
           externalId={currentMovie.Id}
@@ -143,8 +155,7 @@ export function MovieListItem({ movie, onClick, variant = "full", isLiked }: Mov
           )}
 
           <div className="flex gap-2">
-            {capabilities.requiresServerUrl && !sessionStatus?.isGuest && <Link href={detailsUrl} onClick={e => e.stopPropagation()} className="flex-1">
-
+            {capabilities.requiresServerUrl && !sessionStatus?.isGuest && <Link href={detailsUrl} onClick={e => e.stopPropagation()} target="_blank" className="flex-1">
               <Button
                 size="sm"
                 variant="secondary"
@@ -152,11 +163,19 @@ export function MovieListItem({ movie, onClick, variant = "full", isLiked }: Mov
                   "h-7 text-xs w-full",
                 )}
               >
-                <Play className={cn("mr-2 w-2 h-2")} />
-                Play
+                {(currentMovie.resolvedProvider === 'tmdb' || currentMovie.sourceProvider === 'tmdb') ? (
+                  <>
+                    <Bookmark className={cn("mr-2 w-2 h-2")} />
+                    {(currentMovie.Type === 'Movie' && radarrUrl) || (currentMovie.Type === 'Series' && sonarrUrl) ? 'Add' : 'View'}
+                  </>
+                ) : (
+                  <>
+                    <Play className={cn("mr-2 w-2 h-2")} />
+                    Play
+                  </>
+                )}
               </Button>
-            </Link>
-            }
+            </Link>}
             {capabilities.hasStreamingSettings && <div className="flex flex-1 flex-row gap-2 items-center">
               {currentMovie.WatchProviders?.slice(0, 10).map((provider) => (
                 <OptimizedImage

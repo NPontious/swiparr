@@ -14,6 +14,7 @@ export interface Filters {
   excludedThemes?: string[];
   tmdbLanguages?: string[];
   unplayedOnly?: boolean;
+  providerFilter?: "library" | "tmdb" | "both";
 }
 
 export interface SessionSettings {
