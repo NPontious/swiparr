@@ -28,10 +28,6 @@ export async function GET(request: NextRequest) {
 
     try {
         const result = await MediaService.getMediaItems(session, page, limit, searchTerm, overrideFilters);
-        logger.debug(`API returning ${result.items?.length || 0} items for filters:`, overrideFilters);
-        if (result.items?.length > 0) {
-            logger.debug(`First item Name: ${result.items[0].Name}, MediaType: ${result.items[0].Type || 'unknown'}`);
-        }
         return NextResponse.json(result);
     } catch (error) {
         return handleApiError(error, "Failed to fetch deck");
