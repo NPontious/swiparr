@@ -58,6 +58,7 @@ export const sessionSettingsSchema = z.object({
     excludedThemes: z.array(z.string()).optional(),
     tmdbLanguages: z.array(z.string()).optional(),
     unplayedOnly: z.boolean().optional(),
+    mediaType: z.enum(["movie", "tv", "both"]).optional(),
   }).optional().or(z.any()),
   settings: z.object({
     maxMatches: z.number().int().min(0).optional(),
