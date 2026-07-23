@@ -107,9 +107,13 @@ export function CardDeck() {
       } else {
         // Normal pagination or data update within the same mode
         setDisplayDeck((prev) => {
-          if (deck.length === 0 && prev.length > 0) {
-              // We're appending 0 items. Just return prev.
-              return prev;
+          if (deck.length === 0) {
+              // The API explicitly returned 0 items for this query.
+              // We MUST clear the deck so we don't display items from the old filter.
+              setRemovedIds([]);
+              swipedIdsRef.current.clear();
+              setLastSwipe(null);
+              return [];
           }
 
           // If the deck is completely different (e.g. session change), reset instead of append
@@ -127,6 +131,7 @@ export function CardDeck() {
 
           const existingIds = new Set(prev.map((i) => i.Id));
           const newItems = deck.filter((item) => !existingIds.has(item.Id));
+          // If we just fetched the EXACT same items (e.g. background refetch), return prev to avoid re-rendering
           if (newItems.length === 0) return prev;
           return [...prev, ...newItems];
         });
