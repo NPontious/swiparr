@@ -87,7 +87,7 @@ Note: The automatic deployment workflow in Vercel uses the Turso integration by 
 ```yaml
 services:
   swiparr:
-    image: ghcr.io/NPontious/swiparr:latest
+    image: ghcr.io/npontious/swiparr:latest
     container_name: swiparr
     restart: unless-stopped
     environment:
@@ -114,7 +114,7 @@ docker run -d \
   -v $(pwd)/swiparr-data:/app/data \
   -e PROVIDER=jellyfin \
   -e JELLYFIN_URL=http://your-jellyfin:8096 \
-  ghcr.io/NPontious/swiparr:latest
+  ghcr.io/npontious/swiparr:latest
 ```
 
 3. Open [http://localhost:4321](http://localhost:4321)

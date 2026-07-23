@@ -1,6 +1,6 @@
 services:
   swiparr:
-    image: ghcr.io/NPontious/swiparr:latest
+    image: ghcr.io/npontious/swiparr:latest
     container_name: swiparr
     restart: unless-stopped
     environment:
