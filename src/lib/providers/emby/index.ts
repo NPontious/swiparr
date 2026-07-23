@@ -62,7 +62,7 @@ export class EmbyProvider implements MediaProvider {
     }
 
     const params: Record<string, any> = {
-      IncludeItemTypes: "Movie",
+      IncludeItemTypes: filters.mediaType === "tv" ? "Series" : filters.mediaType === "both" ? "Movie,Series" : "Movie",
       Recursive: true,
       Fields: "Overview,RunTimeTicks,ProductionYear,CommunityRating,OfficialRating,Genres,ImageTags,BackdropImageTags,UserData,PreferredMetadataLanguage,ProductionLocations,MediaStreams",
       SortBy: filters.sortBy === "Random" ? "Random" : 
@@ -127,7 +127,7 @@ export class EmbyProvider implements MediaProvider {
     const res = await apiClient.get(getEmbyUrl("/Items/Filters2", auth?.serverUrl), {
       params: {
         userId: auth?.userId,
-        includeItemTypes: "Movie",
+        includeItemTypes: "Movie,Series",
         recursive: true,
       },
       headers: auth?.accessToken ? getAuthenticatedHeaders(auth.accessToken, auth.deviceId || "Swiparr") : {},

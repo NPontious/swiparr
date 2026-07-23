@@ -68,7 +68,7 @@ export class JellyfinProvider implements MediaProvider {
     }
 
     const params: Record<string, any> = {
-      IncludeItemTypes: "Movie",
+      IncludeItemTypes: filters.mediaType === "tv" ? "Series" : filters.mediaType === "both" ? "Movie,Series" : "Movie",
       Recursive: true,
       Fields: "Overview,RunTimeTicks,ProductionYear,CommunityRating,OfficialRating,Genres,ImageTags,BackdropImageTags,UserData,PreferredMetadataLanguage,ProductionLocations,MediaStreams,ProviderIds",
       SortBy: filters.sortBy === "Random" ? "Random" : 
@@ -138,7 +138,7 @@ export class JellyfinProvider implements MediaProvider {
       const res = await apiClient.get(url, {
         params: {
           userId: auth?.userId,
-          includeItemTypes: "Movie",
+          includeItemTypes: "Movie,Series",
           recursive: true,
         },
         headers: auth?.accessToken ? getAuthenticatedHeaders(auth.accessToken, auth.deviceId || "Swiparr") : {},

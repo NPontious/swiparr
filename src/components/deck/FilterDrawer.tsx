@@ -55,6 +55,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
   const [themeFilterMode, setThemeFilterMode] = useState<"include" | "exclude">("include");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(DEFAULT_LANGUAGES);
   const [showAllLanguages, setShowAllLanguages] = useState(false);
+  const [mediaType, setMediaType] = useState<"movie" | "tv" | "both">("movie");
   const [sortBy, setSortBy] = useState<string>("Trending");
   const [unplayedOnly, setUnplayedOnly] = useState<boolean>(true);
   const [yearRange, setYearRange] = useState<[number, number]>([1900, new Date().getFullYear()]);
@@ -136,6 +137,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
         setThemeFilterMode("include");
       }
       setSelectedLanguages(currentFilters?.tmdbLanguages ?? DEFAULT_LANGUAGES);
+      setMediaType(currentFilters?.mediaType || "movie");
       setSortBy(currentFilters?.sortBy || defaultSort);
       setUnplayedOnly(currentFilters?.unplayedOnly ?? true);
       setYearRange(currentFilters?.yearRange || [minYearLimit, maxYearLimit]);
@@ -160,6 +162,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
       f.watchProviders.length === availableWatchProviderIds.length;
 
     return {
+      mediaType: f.mediaType === "movie" ? undefined : f.mediaType,
       genres: f.genres?.length ? f.genres : [],
       excludedGenres: f.excludedGenres?.length ? f.excludedGenres : undefined,
       officialRatings: f.officialRatings?.length ? f.officialRatings : undefined,
@@ -178,6 +181,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
 
   const getCurrentFiltersObject = (): Filters => {
     return normalizeFilters({
+      mediaType: mediaType,
       genres: selectedGenres,
       excludedGenres,
       officialRatings: selectedRatings,
@@ -225,6 +229,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
     setThemeFilterMode("include");
     setSelectedLanguages(DEFAULT_LANGUAGES);
     setShowAllLanguages(false);
+    setMediaType("movie");
     setSortBy(defaultSort);
     setUnplayedOnly(true);
     setYearRange([minYearLimit, maxYearLimit]);
@@ -375,6 +380,25 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
               </div>
             ) : (
               <>
+                {/* Media Type Section */}
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Media Type</Label>
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size={"sm"}
+                      value={mediaType}
+                      onValueChange={(val) => { if (val) setMediaType(val as any); }}
+                      className="flex mr-auto"
+                    >
+                      <ToggleGroupItem value="movie" aria-label="Movies">Movies</ToggleGroupItem>
+                      <ToggleGroupItem value="tv" aria-label="TV Shows">TV Shows</ToggleGroupItem>
+                      <ToggleGroupItem value="both" aria-label="Both">Both</ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                </div>
+
                 {/* Sort Section */}
                 <div className="space-y-4 -mb-4">
                   <div className="flex flex-wrap gap-2">

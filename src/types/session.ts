@@ -1,4 +1,5 @@
 export interface Filters {
+  mediaType?: "movie" | "tv" | "both";
   genres: string[];
   excludedGenres?: string[];
   yearRange?: [number, number];

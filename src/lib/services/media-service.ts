@@ -145,7 +145,7 @@ export class MediaService {
         logger.error("Error fetching base items for mixed deck:", e);
         return [];
       }),
-      tmdbProvider.getItems(tmdbParams, auth).catch((e: any) => {
+      params.mediaType === "tv" ? Promise.resolve([]) : tmdbProvider.getItems(tmdbParams, auth).catch((e: any) => {
         logger.error("Error fetching tmdb items for mixed deck:", e);
         return [];
       })
@@ -261,6 +261,7 @@ export class MediaService {
         excludedThemes: sessionFilters?.excludedThemes,
         tmdbLanguages: sessionFilters?.tmdbLanguages,
         unplayedOnly: sessionFilters?.unplayedOnly,
+        mediaType: sessionFilters?.mediaType,
         limit: requestLimit,
         offset: effectiveOffset + scanOffset,
       });
@@ -371,6 +372,7 @@ export class MediaService {
       excludedThemes: sessionFilters?.excludedThemes,
       tmdbLanguages: sessionFilters?.tmdbLanguages,
       unplayedOnly: sessionFilters?.unplayedOnly,
+        mediaType: sessionFilters?.mediaType,
     };
 
     // Check cache first
@@ -533,6 +535,7 @@ export class MediaService {
             excludedThemes: sessionFilters?.excludedThemes,
             tmdbLanguages: sessionFilters?.tmdbLanguages,
             unplayedOnly: sessionFilters?.unplayedOnly,
+        mediaType: sessionFilters?.mediaType,
             sortBy: "SortName", // Use consistent sort for fetching
             limit: batchSize,
             offset,
@@ -597,6 +600,7 @@ export class MediaService {
           excludedThemes: sessionFilters?.excludedThemes,
           tmdbLanguages: sessionFilters?.tmdbLanguages,
           unplayedOnly: sessionFilters?.unplayedOnly,
+        mediaType: sessionFilters?.mediaType,
           limit: 1000, // Fetch large batch
           offset: 0,
         }, auth);

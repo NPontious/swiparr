@@ -76,6 +76,7 @@ export const PROVIDER_CAPABILITIES: Record<ProviderType, ProviderCapabilities> =
 
 
 export interface SearchFilters {
+  mediaType?: "movie" | "tv" | "both";
   genres?: string[];
   excludedGenres?: string[];
   years?: number[];
