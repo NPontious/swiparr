@@ -20,8 +20,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const searchParams = request.nextUrl.searchParams;
     const imageType = searchParams.get("imageType") || "Primary";
+    const requestedProvider = searchParams.get("provider");
     const creds = await AuthService.getEffectiveCredentials(session);
-    const provider = getMediaProvider(creds.provider);
+    const provider = getMediaProvider(requestedProvider || creds.provider);
     
     const blurDataURL = await provider.getBlurDataUrl(id, imageType, creds);
     

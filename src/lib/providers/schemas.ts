@@ -62,6 +62,7 @@ export const JellyfinItemSchema = z.object({
     Type: z.string().optional(),
     PrimaryImageTag: z.string().optional(),
   })).optional(),
+  ProviderIds: z.record(z.string(), z.string()).optional(),
 });
 
 export const JellyfinQueryResultSchema = z.object({

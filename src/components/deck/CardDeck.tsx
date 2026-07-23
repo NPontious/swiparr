@@ -296,7 +296,7 @@ export function CardDeck() {
 
   useHotkeys("left", () => handleSwipeAction("left"), { enabled: !isFilterOpen && activeDeck.length > 0 });
   useHotkeys("right", () => handleSwipeAction("right"), { enabled: !isFilterOpen && activeDeck.length > 0 });
-  useHotkeys("up", () => activeDeck[0] && openMovie(activeDeck[0].Id, { showLikedBy: false, sessionCode }), { enabled: !isFilterOpen && activeDeck.length > 0 });
+  useHotkeys("up", () => activeDeck[0] && openMovie(activeDeck[0].Id, { showLikedBy: false, sessionCode, provider: activeDeck[0].resolvedProvider }), { enabled: !isFilterOpen && activeDeck.length > 0 });
 
   if (isLoadingSession || isTransitioning || (activeDeck.length === 0 && (isLoading || isFetchingNextPage))) {
     return <DeckLoading />;
@@ -348,7 +348,7 @@ export function CardDeck() {
                   index={zIndex}
                    onSwipe={onSwipe}
                    onCardLeftScreen={onCardLeftScreen}
-                   onClick={() => openMovie(item.Id, { showLikedBy: false, sessionCode })}
+                   onClick={() => openMovie(item.Id, { showLikedBy: false, sessionCode, provider: item.resolvedProvider })}
                    preventSwipe={prevent}
                  />
               );

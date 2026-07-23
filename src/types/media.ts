@@ -50,6 +50,14 @@ export interface MediaItem {
     hasCustomProfilePicture?: boolean;
     profileUpdatedAt?: string;
   }[];
+  sourceProvider?: string;
+  resolvedProvider?: string;
+  sourceItemId?: string;
+  ExternalIds?: {
+    TmdbId?: string;
+    ImdbId?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 export interface MediaLibrary {

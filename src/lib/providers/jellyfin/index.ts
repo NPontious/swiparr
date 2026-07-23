@@ -70,7 +70,7 @@ export class JellyfinProvider implements MediaProvider {
     const params: Record<string, any> = {
       IncludeItemTypes: "Movie",
       Recursive: true,
-      Fields: "Overview,RunTimeTicks,ProductionYear,CommunityRating,OfficialRating,Genres,ImageTags,BackdropImageTags,UserData,PreferredMetadataLanguage,ProductionLocations,MediaStreams",
+      Fields: "Overview,RunTimeTicks,ProductionYear,CommunityRating,OfficialRating,Genres,ImageTags,BackdropImageTags,UserData,PreferredMetadataLanguage,ProductionLocations,MediaStreams,ProviderIds",
       SortBy: filters.sortBy === "Random" ? "Random" : 
               filters.sortBy === "Trending" ? "CommunityRating" :
               filters.sortBy === "Popular" ? "CommunityRating" :
@@ -315,6 +315,13 @@ export class JellyfinProvider implements MediaProvider {
         Likes: item.UserData.Likes,
         Played: item.UserData.Played,
       } : undefined,
+      sourceProvider: ProviderType.JELLYFIN,
+      resolvedProvider: ProviderType.JELLYFIN,
+      ExternalIds: {
+        TmdbId: item.ProviderIds?.Tmdb,
+        ImdbId: item.ProviderIds?.Imdb,
+        ...item.ProviderIds,
+      }
     };
   }
 }

@@ -22,16 +22,17 @@ import { QUERY_KEYS } from "@/hooks/api/query-keys";
 import { TMDB_MOVIE_BASE_URL } from "@/lib/constants";
 import { getLanguageLabel } from "@/lib/language";
 import { getProviderDetailsUrl } from "@/lib/provider-links";
-import { ProviderType } from "@/lib/providers/types";
+import { ProviderType, PROVIDER_CAPABILITIES } from "@/lib/providers/types";
 
 interface Props {
   movieId: string | null;
   onClose: () => void;
   showLikedBy?: boolean;
   sessionCode?: string | null;
+  provider?: string;
 }
 
-export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionCode }: Props) {
+export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionCode, provider }: Props) {
   // 1. Create a manual motion value for scroll position
   const scrollY = useMotionValue(0);
 
@@ -50,7 +51,9 @@ export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionC
     queryFn: async () => {
       if (!movieId) return null;
       const codeParam = sessionCode === null ? "" : (sessionCode ?? "");
-      const res = await apiClient.get<MediaItem>(`/api/media/item/${movieId}?sessionCode=${codeParam}&includeUserState=1`);
+      let url = `/api/media/item/${movieId}?sessionCode=${codeParam}&includeUserState=1`;
+      if (provider) url += `&provider=${provider}`;
+      const res = await apiClient.get<MediaItem>(url);
       return res.data;
     },
     enabled: !!movieId,
@@ -83,6 +86,9 @@ export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionC
     itemId: movie?.Id || "",
   });
   const languageLabel = getLanguageLabel(movie?.Language);
+  
+  const itemProvider = movie?.resolvedProvider || movie?.sourceProvider || activeProvider;
+  const itemCapabilities = PROVIDER_CAPABILITIES[itemProvider as ProviderType] || capabilities;
 
   const ratingSource = movie?.CommunityRatingSource?.toLowerCase();
   const isRottenTomatoes = ratingSource?.includes("rottentomatoes") || ratingSource?.includes("tomato");
@@ -129,8 +135,8 @@ export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionC
                 >
                   <OptimizedImage
                     src={movie.BackdropImageTags && movie.BackdropImageTags.length > 0 && movie.BackdropImageTags[0]
-                      ? `/api/media/image/${movie.Id}?imageType=Backdrop&tag=${movie.BackdropImageTags[0]}`
-                      : `/api/media/image/${movie.Id}?imageType=Backdrop`
+                      ? `/api/media/image/${movie.Id}?imageType=Backdrop&tag=${movie.BackdropImageTags[0]}${provider ? `&provider=${provider}` : ''}`
+                      : `/api/media/image/${movie.Id}?imageType=Backdrop${provider ? `&provider=${provider}` : ''}`
                     }
                     externalId={movie.Id}
                     imageType="Backdrop"
@@ -150,8 +156,8 @@ export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionC
                 <div className="absolute bottom-4 left-4 right-4 flex items-end gap-3">
                   <OptimizedImage
                     src={movie.ImageTags?.Primary 
-                      ? `/api/media/image/${movie.Id}?tag=${movie.ImageTags?.Primary}`
-                      : `/api/media/image/${movie.Id}?imageType=Primary`
+                      ? `/api/media/image/${movie.Id}?tag=${movie.ImageTags?.Primary}${provider ? `&provider=${provider}` : ''}`
+                      : `/api/media/image/${movie.Id}?imageType=Primary${provider ? `&provider=${provider}` : ''}`
                     }
                     externalId={movie.Id}
                     imageType="Primary"
@@ -233,7 +239,7 @@ export function MovieDetailView({ movieId, onClose, showLikedBy = true, sessionC
                       </Button>
                     </Link>
                   )}
-                  {!isGuest && capabilities.hasAuth && capabilities.hasWatchlist && (
+                  {!isGuest && itemCapabilities.hasAuth && itemCapabilities.hasWatchlist && (
                     <Button
                       className="w-32"
                       size="lg"

@@ -82,6 +82,79 @@ export class MediaService {
     }
   }
 
+  private static mergeAndResolveItems(baseItems: MediaItem[], tmdbItems: MediaItem[]): MediaItem[] {
+    const baseMapByTmdbId = new Map<string, MediaItem>();
+    const baseMapByImdbId = new Map<string, MediaItem>();
+    const baseMapByTitleYear = new Map<string, MediaItem>();
+
+    for (const item of baseItems) {
+      if (item.ExternalIds?.TmdbId) baseMapByTmdbId.set(item.ExternalIds.TmdbId, item);
+      if (item.ExternalIds?.ImdbId) baseMapByImdbId.set(item.ExternalIds.ImdbId, item);
+      if (item.Name && item.ProductionYear) {
+        baseMapByTitleYear.set(`${item.Name.toLowerCase()}-${item.ProductionYear}`, item);
+      }
+    }
+
+    const mixed: MediaItem[] = [];
+    const seenIds = new Set<string>();
+
+    const addItem = (item: MediaItem) => {
+      if (!seenIds.has(item.Id)) {
+        seenIds.add(item.Id);
+        mixed.push(item);
+      }
+    };
+
+    const maxLength = Math.max(baseItems.length, tmdbItems.length);
+    for (let i = 0; i < maxLength; i++) {
+      if (i < baseItems.length) addItem(baseItems[i]);
+      if (i < tmdbItems.length) {
+        let tmdbItem = tmdbItems[i];
+        
+        let resolvedBaseItem: MediaItem | undefined;
+        if (tmdbItem.ExternalIds?.TmdbId && baseMapByTmdbId.has(tmdbItem.ExternalIds.TmdbId)) {
+          resolvedBaseItem = baseMapByTmdbId.get(tmdbItem.ExternalIds.TmdbId);
+        } else if (tmdbItem.ExternalIds?.ImdbId && baseMapByImdbId.has(tmdbItem.ExternalIds.ImdbId)) {
+          resolvedBaseItem = baseMapByImdbId.get(tmdbItem.ExternalIds.ImdbId);
+        } else if (tmdbItem.Name && tmdbItem.ProductionYear) {
+          resolvedBaseItem = baseMapByTitleYear.get(`${tmdbItem.Name.toLowerCase()}-${tmdbItem.ProductionYear}`);
+        }
+
+        if (!resolvedBaseItem) {
+          addItem(tmdbItem);
+        }
+      }
+    }
+
+    return mixed;
+  }
+
+  private static async getMixedProviderItems(provider: any, auth: any, params: any): Promise<MediaItem[]> {
+    if (auth.provider !== ProviderType.JELLYFIN && auth.provider !== ProviderType.EMBY) {
+      return provider.getItems(params, auth);
+    }
+    
+    const tmdbProvider = getMediaProvider(ProviderType.TMDB);
+    const tmdbParams = {
+        ...params,
+        sortBy: "Popular",
+    };
+
+    const [baseItems, tmdbItems] = await Promise.all([
+      provider.getItems(params, auth).catch((e: any) => {
+        logger.error("Error fetching base items for mixed deck:", e);
+        return [];
+      }),
+      tmdbProvider.getItems(tmdbParams, auth).catch((e: any) => {
+        logger.error("Error fetching tmdb items for mixed deck:", e);
+        return [];
+      })
+    ]);
+
+    const merged = this.mergeAndResolveItems(baseItems, tmdbItems);
+    return merged.slice(0, params.limit || 20);
+  }
+
   private static async resolveWatchProviders(session: SessionData, sessionFilters: Filters | null, auth: any, activeProviderName: string) {
     let watchProviders = sessionFilters?.watchProviders;
     const { tmdbDefaultRegion } = getRuntimeConfig();
@@ -172,7 +245,7 @@ export class MediaService {
           provider: auth.provider,
         });
       }
-      fetchedItems = await provider.getItems({
+      fetchedItems = await this.getMixedProviderItems(provider, auth, {
         libraries: includedLibraries.length > 0 ? includedLibraries : undefined,
         genres: sessionFilters?.genres,
         excludedGenres: sessionFilters?.excludedGenres,
@@ -190,7 +263,7 @@ export class MediaService {
         unplayedOnly: sessionFilters?.unplayedOnly,
         limit: requestLimit,
         offset: effectiveOffset + scanOffset,
-      }, auth);
+      });
 
       if (fetchedItems.length === 0) {
         exhausted = true;
@@ -402,7 +475,11 @@ export class MediaService {
 
     // Provider-specific fetching strategies
     if (providerName === ProviderType.JELLYFIN || providerName === ProviderType.EMBY) {
-      return this.fetchAllJellyfinEmbyItems(provider, auth, includedLibraries, sessionFilters, watchProviders, watchRegion);
+      const [baseItems, tmdbItems] = await Promise.all([
+        this.fetchAllJellyfinEmbyItems(provider, auth, includedLibraries, sessionFilters, watchProviders, watchRegion),
+        this.fetchAllTMDBItems(getMediaProvider(ProviderType.TMDB), auth, sessionFilters, watchProviders, watchRegion)
+      ]);
+      return this.mergeAndResolveItems(baseItems, tmdbItems);
     } else if (providerName === ProviderType.PLEX) {
       return this.fetchAllPlexItems(provider, auth, includedLibraries, sessionFilters);
     } else if (providerName === ProviderType.TMDB) {
@@ -638,7 +715,7 @@ export class MediaService {
           provider: auth.provider,
         });
       }
-      fetchedItems = await provider.getItems({
+      fetchedItems = await this.getMixedProviderItems(provider, auth, {
         libraries: includedLibraries.length > 0 ? includedLibraries : undefined,
         genres: sessionFilters?.genres,
         excludedGenres: sessionFilters?.excludedGenres,
@@ -656,7 +733,7 @@ export class MediaService {
         unplayedOnly: sessionFilters?.unplayedOnly !== undefined ? sessionFilters.unplayedOnly : true,
         limit: requestLimit,
         offset: effectiveOffset + scanOffset
-      }, auth);
+      });
       
       if (fetchedItems.length === 0) {
         exhausted = true;

@@ -92,8 +92,8 @@ export const SwipeCard = memo(forwardRef<TinderCardHandle, SwipeCardProps>(
               <div className="absolute inset-0 bg-muted pointer-events-none rounded-3xl">
                 <OptimizedImage
                   src={item.ImageTags?.Primary 
-                    ? `/api/media/image/${item.Id}?tag=${item.ImageTags?.Primary}`
-                    : `/api/media/image/${item.Id}`
+                    ? `/api/media/image/${item.Id}?tag=${item.ImageTags?.Primary}${item.resolvedProvider ? `&provider=${item.resolvedProvider}` : ''}`
+                    : `/api/media/image/${item.Id}${item.resolvedProvider ? `?provider=${item.resolvedProvider}` : ''}`
                   }
                   alt={item.Name}
                   externalId={item.Id}
@@ -107,6 +107,14 @@ export const SwipeCard = memo(forwardRef<TinderCardHandle, SwipeCardProps>(
                 />
                 <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-neutral-950 via-neutral-950/60 to-transparent" />
               </div>
+
+              {item.resolvedProvider && (
+                <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                  <Badge variant="outline" className="bg-black/50 text-white backdrop-blur-md border-white/10 uppercase tracking-widest text-[10px]">
+                    {item.resolvedProvider}
+                  </Badge>
+                </div>
+              )}
 
               {/* Content Overlay */}
               <div className="absolute bottom-0 left-0 p-6 text-foreground w-full select-none pointer-events-none">

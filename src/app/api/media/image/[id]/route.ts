@@ -44,9 +44,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
   }
 
-  // Always derive the provider from the authenticated session — never from a
-  // client-supplied query parameter — to prevent provider-confusion attacks (M4).
-  const providerType = auth?.provider;
+  // Allow provider query param for mixed decks, but fallback to auth provider.
+  // The Plex provider explicitly validates external URLs to prevent SSRF.
+  const requestedProvider = searchParams.get("provider");
+  const providerType = requestedProvider || auth?.provider;
   const provider = getMediaProvider(providerType);
 
   // If no tag is provided, some providers (like TMDB) might use the ID if it looks like a path

@@ -65,10 +65,10 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
 
   const { data: session } = useSession();
   const defaultSort = session?.provider === ProviderType.TMDB ? "Popular" : "Trending"; // Popular works better with TMDB
-  const isTmdb = session?.provider === ProviderType.TMDB;
+  const isTmdb = session?.provider === ProviderType.TMDB || session?.provider === ProviderType.JELLYFIN || session?.provider === ProviderType.EMBY;
   const { capabilities, tmdbDefaultRegion } = useRuntimeConfig();
   const { data: userSettings } = useUserSettings();
-  const watchRegion = session?.provider === ProviderType.TMDB ? (userSettings?.watchRegion || tmdbDefaultRegion) : undefined;
+  const watchRegion = (session?.provider === ProviderType.TMDB || session?.provider === ProviderType.JELLYFIN || session?.provider === ProviderType.EMBY) ? (userSettings?.watchRegion || tmdbDefaultRegion) : undefined;
 
   const { genres, years, ratings, isLoading: isLoadingFilters } = useFilters(open, watchRegion);
   const { data: themes = [], isLoading: isLoadingThemes } = useThemes(open);
@@ -744,7 +744,7 @@ export function FilterDrawer({ open, onOpenChange, currentFilters, onSave }: Fil
                 )}
 
                 {/* Watch Providers Section */}
-                {capabilities.hasStreamingSettings && availableWatchProviders.length > 0 && (
+                {(capabilities.hasStreamingSettings || session?.provider === ProviderType.JELLYFIN || session?.provider === ProviderType.EMBY) && availableWatchProviders.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">

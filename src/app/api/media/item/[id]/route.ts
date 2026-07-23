@@ -18,6 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { searchParams } = new URL(request.url);
   const sessionCodeQuery = searchParams.get("sessionCode");
   const includeUserState = searchParams.get("includeUserState") !== "0";
+  const sourceProvider = searchParams.get("provider");
 
   // Determine which session code to use for looking up likes
   // 1. Explicit query param (important for distinguishing solo vs session likes in lists)
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const auth = await AuthService.getEffectiveCredentials(session);
-    const provider = getMediaProvider(auth.provider);
+    const provider = getMediaProvider(sourceProvider || auth.provider);
     const item = await provider.getItemDetails(id, auth, { includeUserState });
 
     const itemLikes = await db.select().from(likes).where(and(

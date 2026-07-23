@@ -326,6 +326,12 @@ export class TmdbProvider implements MediaProvider {
         Backdrop: movie.backdrop_path,
       },
       Genres: movie.genre_ids?.map((id: number) => genreMap?.get(id.toString())).filter(Boolean) || [], 
+      sourceProvider: ProviderType.TMDB,
+      resolvedProvider: ProviderType.TMDB,
+      sourceItemId: movie.id.toString(),
+      ExternalIds: {
+        TmdbId: movie.id.toString(),
+      }
     };
   }
 
@@ -376,6 +382,13 @@ export class TmdbProvider implements MediaProvider {
       BackdropImageTags: movie.backdrop_path ? [movie.backdrop_path] : [],
       People: people,
       WatchProviders: this.mapWatchProviders(movie['watch/providers']?.results, region),
+      sourceProvider: ProviderType.TMDB,
+      resolvedProvider: ProviderType.TMDB,
+      sourceItemId: movie.id.toString(),
+      ExternalIds: {
+        TmdbId: movie.id.toString(),
+        ImdbId: movie.imdb_id,
+      }
     };
   }
 
