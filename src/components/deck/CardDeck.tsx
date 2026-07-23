@@ -94,7 +94,7 @@ export function CardDeck() {
     }
   }, [sessionCode, filtersJson, settingsHash, deck, isLoading]);
 
-   // Update displayDeck when new items are fetched or filters change
+  // Update displayDeck when new items are fetched or filters change
   useEffect(() => {
     if (deck && Array.isArray(deck) && !isLoading) {
       if (isTransitioning) {
@@ -106,8 +106,12 @@ export function CardDeck() {
         setIsTransitioning(false);
       } else {
         // Normal pagination or data update within the same mode
-        // If we are in the middle of a transition but deck changed, it's likely the new data
         setDisplayDeck((prev) => {
+          if (deck.length === 0 && prev.length > 0) {
+              // We're appending 0 items. Just return prev.
+              return prev;
+          }
+
           // If the deck is completely different (e.g. session change), reset instead of append
           // We detect this by checking if there's any overlap in the first few items
           const currentFirstId = prev[0]?.Id;
@@ -115,7 +119,6 @@ export function CardDeck() {
           
           if (prev.length > 0 && newFirstId && !deck.some(item => item.Id === currentFirstId) && !prev.some(item => item.Id === newFirstId)) {
             // Deck seems entirely new, reset state
-            // Use setTimeout to avoid state updates during render if needed, but here it's inside an effect
             setRemovedIds([]);
             swipedIdsRef.current.clear();
             setLastSwipe(null);
@@ -134,6 +137,13 @@ export function CardDeck() {
   // Fallback to clear transition state if data is already there but effect didn't catch it
   useEffect(() => {
     if (isTransitioning && deckData && !isLoading) {
+      if (deckData?.pages?.[0]?.items?.length === 0) {
+        // If the new query literally returned 0 items, we must clear the deck!
+        setDisplayDeck([]);
+        setRemovedIds([]);
+        swipedIdsRef.current.clear();
+        setLastSwipe(null);
+      }
       setIsTransitioning(false);
     }
   }, [isTransitioning, deckData, isLoading]);

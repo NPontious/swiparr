@@ -83,6 +83,13 @@ export class MediaService {
       } else {
         filteredIncludedLibraries = matchingLibs.map((l: any) => l.Id);
       }
+      
+      logger.info("[MediaService] Library filtering", {
+        mediaType: sessionFilters?.mediaType,
+        includedLibraries,
+        matchingLibs: matchingLibs.map((l: any) => ({ name: l.Name, id: l.Id, type: l.CollectionType })),
+        filteredIncludedLibraries
+      });
     }
 
     const { watchProviders, watchRegion } = await this.resolveWatchProviders(session, sessionFilters, auth, activeProviderName);
@@ -505,7 +512,7 @@ export class MediaService {
     if (providerName === ProviderType.JELLYFIN || providerName === ProviderType.EMBY) {
       const [baseItems, tmdbItems] = await Promise.all([
         this.fetchAllJellyfinEmbyItems(provider, auth, includedLibraries, sessionFilters, watchProviders, watchRegion),
-        this.fetchAllTMDBItems(getMediaProvider(ProviderType.TMDB), auth, sessionFilters, watchProviders, watchRegion)
+        sessionFilters?.mediaType === "tv" ? Promise.resolve([]) : this.fetchAllTMDBItems(getMediaProvider(ProviderType.TMDB), auth, sessionFilters, watchProviders, watchRegion)
       ]);
       return this.mergeAndResolveItems(baseItems, tmdbItems);
     } else if (providerName === ProviderType.PLEX) {
