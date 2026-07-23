@@ -152,7 +152,7 @@ export function AdminSettings() {
                                         <div className="grid gap-2">
                                             {availableLibraries.length === 0 ? (
                                                 <div className="text-xs text-center py-4 text-muted-foreground border rounded-md border-dashed">
-                                                    No movie libraries found
+                                                    No libraries found
                                                 </div>
                                             ) : (
                                                 availableLibraries.map((lib: MediaLibrary) => {

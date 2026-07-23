@@ -508,9 +508,19 @@ export class MediaService {
 
     // Get libraries to fetch from
     let libraries = includedLibraries;
-    if (libraries.length === 0) {
-      const availableLibraries = await provider.getLibraries(auth);
-      libraries = availableLibraries.map((lib: any) => lib.Id);
+    const availableLibraries = await provider.getLibraries(auth);
+    const filteredLibs = availableLibraries.filter((lib: any) => {
+      if (sessionFilters?.mediaType === "tv") return lib.CollectionType === "tvshows";
+      if (sessionFilters?.mediaType === "both") return lib.CollectionType === "movies" || lib.CollectionType === "tvshows";
+      return lib.CollectionType === "movies";
+    });
+    
+    if (libraries.length > 0) {
+      // Keep only libraries that match the requested media type
+      const intersection = filteredLibs.filter((l: any) => libraries.includes(l.Id)).map((l: any) => l.Id);
+      libraries = intersection.length > 0 ? intersection : filteredLibs.map((l: any) => l.Id);
+    } else {
+      libraries = filteredLibs.map((l: any) => l.Id);
     }
 
     // Fetch from each library
@@ -576,11 +586,18 @@ export class MediaService {
 
     // Get libraries to fetch from
     let libraries = includedLibraries;
-    if (libraries.length === 0) {
-      const availableLibraries = await provider.getLibraries(auth);
-      libraries = availableLibraries
-        .filter((lib: any) => lib.CollectionType === "movies")
-        .map((lib: any) => lib.Id);
+    const availableLibraries = await provider.getLibraries(auth);
+    const filteredLibs = availableLibraries.filter((lib: any) => {
+      if (sessionFilters?.mediaType === "tv") return lib.CollectionType === "show"; // Plex uses 'show' for TV
+      if (sessionFilters?.mediaType === "both") return lib.CollectionType === "movie" || lib.CollectionType === "show";
+      return lib.CollectionType === "movie"; // Plex uses 'movie'
+    });
+    
+    if (libraries.length > 0) {
+      const intersection = filteredLibs.filter((l: any) => libraries.includes(l.Id)).map((l: any) => l.Id);
+      libraries = intersection.length > 0 ? intersection : filteredLibs.map((l: any) => l.Id);
+    } else {
+      libraries = filteredLibs.map((l: any) => l.Id);
     }
 
     // Fetch from each library section

@@ -241,11 +241,11 @@ export class PlexProvider implements MediaProvider {
     }
     const libraryItems = await getCachedLibraries(auth.accessToken, auth.deviceId, auth.userId, auth.serverUrl);
     return libraryItems
-      .filter((l: any) => l.type === "movie")
+      .filter((l: any) => l.type === "movie" || l.type === "show")
       .map((l: any) => ({
         Id: l.key,
         Name: l.title,
-        CollectionType: "movies",
+        CollectionType: l.type === "movie" ? "movies" : "tvshows",
       }));
   }
 

@@ -11,7 +11,7 @@ export async function getCachedYears(accessToken: string, deviceId: string, user
     const res = await apiClient.get(getJellyfinUrl(`/Years`), {
         params: {
             Recursive: true,
-            IncludeItemTypes: "Movie",
+            IncludeItemTypes: "Movie,Series",
             UserId: userId,
             Limit: 500,
             SortBy: "SortName",
@@ -30,7 +30,7 @@ export async function getCachedGenres(accessToken: string, deviceId: string, use
     const res = await apiClient.get(getJellyfinUrl(`/Genres`), {
         params: {
             Recursive: true,
-            IncludeItemTypes: "Movie",
+            IncludeItemTypes: "Movie,Series",
             UserId: userId,
             Limit: 500,
         },
@@ -48,9 +48,9 @@ export async function getCachedLibraries(accessToken: string, deviceId: string, 
         headers: getAuthenticatedHeaders(accessToken, deviceId),
     });
 
-    // Filter to only include Movie libraries
+    // Filter to only include Movie and TV libraries
     return (res.data.Items || []).filter((lib: any) =>
-        lib.CollectionType === "movies"
+        lib.CollectionType === "movies" || lib.CollectionType === "tvshows"
     );
 }
 
@@ -65,7 +65,7 @@ export async function getCachedRatings(accessToken: string, deviceId: string, us
     const res = await apiClient.get(getJellyfinUrl(`/Items/Filters2`), {
         params: {
             UserId: userId,
-            IncludeItemTypes: "Movie",
+            IncludeItemTypes: "Movie,Series",
             Recursive: true,
         },
         headers: getAuthenticatedHeaders(accessToken, deviceId),
